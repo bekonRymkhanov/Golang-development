@@ -1,2 +1,2 @@
-# Web-Dev
-web development course kbtu lab works
+# Golang dev
+golang development course kbtu lab works
