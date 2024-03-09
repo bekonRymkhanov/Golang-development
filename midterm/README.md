@@ -34,15 +34,15 @@ Description
 
 
 API:
-                POST /Episodes
-                GET /Episodes/:id
-                PUT /Episodes/:id
-                DELETE /Episodes/:id
-                HEALTHCHECK /healthCheck
+                POST /Episodes;
+                GET /Episodes/:id;
+                PUT /Episodes/:id;
+                DELETE /Episodes/:id;
+                HEALTHCHECK /healthCheck;
 
 Database Structure :
-                ![alt text](https://github.com/bekonRymkhanov/Golang-development/midterm/remote/dbschema.png?raw=true)
-                https://dbdiagram.io/d/65ec11b8b1f3d4062c801a4e
+    ![Alt text](../midterm/remote/dbschema.png?raw=true "Title")
+    https://dbdiagram.io/d/65ec11b8b1f3d4062c801a4e
 
 Badges:
         this project is overrided all go language errors by writing oun error handlers to not show many details to user and panic if some non-expected error happened,errors handler file can be found in midterm/cmd/api/errors.go 
