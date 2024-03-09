@@ -1,1 +1,3 @@
 DROP TABLE IF EXISTS episodes;
+DROP TABLE IF EXISTS character;
+DROP TABLE IF EXISTS users;

@@ -7,3 +7,12 @@ create table if not exists episodes(
     characters text[] NOT NULL,
     version integer NOT NULL DEFAULT 1
     );
+create table if not exists users(
+   id bigserial PRIMARY KEY,
+   created_at timestamp(0) with time zone NOT NULL DEFAULT NOW(),
+   favoriteEpisodes integer[]
+);
+create table if not exists character(
+    name text,
+    episodeId integer[]
+);
