@@ -12,7 +12,7 @@ create table if not exists users(
    created_at timestamp(0) with time zone NOT NULL DEFAULT NOW(),
    favoriteEpisodes integer[]
 );
-create table if not exists character(
+create table if not exists characters(
     name text,
     episodeId integer[]
 );

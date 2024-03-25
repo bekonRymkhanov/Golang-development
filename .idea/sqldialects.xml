@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="SqlDialectMappings">
+    <file url="file://$PROJECT_DIR$/midterm/migrations/000001_create_episodes_table.down.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/midterm/migrations/000001_create_episodes_table.up.sql" dialect="PostgreSQL" />
+    <file url="file://$PROJECT_DIR$/midterm/migrations/000002_add_episodes_check_constraints.down.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/midterm/migrations/000002_add_episodes_check_constraints.up.sql" dialect="GenericSQL" />
+  </component>
+</project>

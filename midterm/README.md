@@ -1,7 +1,9 @@
-Name
+Name:
+
         the application for storing and updating the information for episodes of popular cartoon "pinguines from madagascar"
 
 Description
+
         code works around app struct and it divided for 5 folders:
 
             ---midterm/bin directory will contain our compiled application binaries, ready for deployment
@@ -34,6 +36,7 @@ Description
 
 
 API:
+
                 POST /Episodes;
                 GET /Episodes/:id;
                 PUT /Episodes/:id;
@@ -42,9 +45,11 @@ API:
 
 Database Structure :
     ![Alt text](../midterm/remote/dbschema.png?raw=true "Title")
+
     https://dbdiagram.io/d/65ec11b8b1f3d4062c801a4e
 
 Badges:
+
         this project is overrided all go language errors by writing oun error handlers to not show many details to user and panic if some non-expected error happened,errors handler file can be found in midterm/cmd/api/errors.go 
 
 
@@ -54,21 +59,25 @@ Installation:
         ...
 
 Usage:
+
         libraries that where used in this project mostly:
-        "context"
-        "database/sql"
-        "flag"
-        "fmt"
-        "log"
-        "net/http"
-        "os"
+
+            "context"
+            "database/sql"
+            "flag"
+            "fmt"
+            "log"
+            "net/http"
+            "os"
 
 Support:
         
         telegram @illegalunicorn,  
         teams b_rymkhanov@kbtu.kz
 
+
 template of message:
+
         im ...........
         writing about your project named .....,
         to ask you questions about ......,
@@ -76,10 +85,12 @@ template of message:
         .....................
 
 Roadmap:
+
         v1.0.0 only supports routers and simple json in web page
         this is the project v2.0.0 but in endterm I will add more things like login ui/ux and e.t.c.
 
 Contributing:
+
         I expect from readers to contribute in flexibility in this project by ability to change the behavior of code
 
         you can join my team in development of application untill the endterm exam,so we can make project more complex and detailed
@@ -91,4 +102,5 @@ Authors and acknowledgment:
 
 
 Project status:
+
         development stage stopped for 2 weeks due to lack of resourses for development (waiting for Airat agai`s lectures)
