@@ -8,6 +8,6 @@ type Episode struct {
 	Title      string    `json:"title"`
 	Year       int32     `json:"year,omitempty"`
 	Runtime    Runtime   `json:"runtime,omitempty"`
-	Characters []string  `json:"Characters"`
+	Characters []string  `json:"characters,omitempty"`
 	Version    int32     `json:"version"`
 }

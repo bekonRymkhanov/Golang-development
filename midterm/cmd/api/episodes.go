@@ -92,10 +92,10 @@ func (app *application) updateEpisodeHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 	var input struct {
-		Title      string       `json:"title"`
-		Year       int32        `json:"year"`
-		Runtime    data.Runtime `json:"runtime"`
-		Characters []string     `json:"characters"`
+		Title      *string       `json:"title"`
+		Year       *int32        `json:"year"`
+		Runtime    *data.Runtime `json:"runtime"`
+		Characters []string      `json:"characters"`
 	}
 
 	err = app.readJSON(w, r, &input)
@@ -104,10 +104,18 @@ func (app *application) updateEpisodeHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	episode.Title = input.Title
-	episode.Year = input.Year
-	episode.Runtime = input.Runtime
-	episode.Characters = input.Characters
+	if input.Title != nil {
+		episode.Title = *input.Title
+	}
+	if input.Year != nil {
+		episode.Year = *input.Year
+	}
+	if input.Runtime != nil {
+		episode.Runtime = *input.Runtime
+	}
+	if input.Characters != nil {
+		episode.Characters = input.Characters
+	}
 
 	v := validator.New()
 
@@ -118,7 +126,12 @@ func (app *application) updateEpisodeHandler(w http.ResponseWriter, r *http.Requ
 
 	err = app.models.Movies.Update(episode)
 	if err != nil {
-		app.serverErrorResponse(w, r, err)
+		switch {
+		case errors.Is(err, data.ErrEditConflict):
+			app.editConflictResponse(w, r)
+		default:
+			app.serverErrorResponse(w, r, err)
+		}
 		return
 	}
 
@@ -149,6 +162,44 @@ func (app *application) deleteEpisodeHandler(w http.ResponseWriter, r *http.Requ
 	}
 
 	err = app.writeJSON(w, http.StatusOK, envelope{"message": "movie successfully deleted"}, nil)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
+
+}
+
+func (app *application) listEpisodesHandler(w http.ResponseWriter, r *http.Request) {
+
+	var input struct {
+		Title      string
+		Characters []string
+		data.Filters
+	}
+	v := validator.New()
+
+	qs := r.URL.Query()
+
+	input.Title = app.readString(qs, "title", "")
+	input.Characters = app.readCSV(qs, "characters", []string{})
+
+	input.Filters.Page = app.readInt(qs, "page", 1, v)
+	input.Filters.PageSize = app.readInt(qs, "page_size", 20, v)
+
+	input.Filters.Sort = app.readString(qs, "sort", "id")
+
+	input.Filters.SortSafelist = []string{"id", "title", "year", "runtime", "-id", "-title", "-year", "-runtime"}
+
+	if data.ValidateFilters(v, input.Filters); !v.Valid() {
+		app.failedValidationResponse(w, r, v.Errors)
+		return
+	}
+
+	episodes, metadata, err := app.models.Movies.GetAll(input.Title, input.Characters, input.Filters)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+	err = app.writeJSON(w, http.StatusOK, envelope{"episodes": episodes, "metadata": metadata}, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}

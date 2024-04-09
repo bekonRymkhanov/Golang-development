@@ -13,6 +13,7 @@ create table if not exists users(
    favoriteEpisodes integer[]
 );
 create table if not exists characters(
+    id bigserial PRIMARY KEY,
     name text,
     episodeId integer[]
 );
