@@ -41,10 +41,11 @@ API:
                 GET /Episodes/:id;
                 PUT /Episodes/:id;
                 DELETE /Episodes/:id;
+                GET /Episodes?sort=year&page_size=1&page=9
                 HEALTHCHECK /healthCheck;
 
 Database Structure :
-    ![Alt text](../midterm/remote/dbschema.png?raw=true "Title")
+    ![Alt text](/remote/dbschema.png?raw=true "Title")
 
     https://dbdiagram.io/d/65ec11b8b1f3d4062c801a4e
 
@@ -72,8 +73,8 @@ Usage:
 
 Support:
         
-        telegram @illegalunicorn,  
-        teams b_rymkhanov@kbtu.kz
+        telegram @illegalunicorn,@d1now1  
+        teams b_rymkhanov@kbtu.kz,d_zeinolla@kbtu.kz
 
 
 template of message:
@@ -99,6 +100,7 @@ Contributing:
 Authors and acknowledgment:
 
         Rymkhanov Bekarys 22B030423
+        Zeinolla Dilnaz 22B031177
 
 
 Project status:
