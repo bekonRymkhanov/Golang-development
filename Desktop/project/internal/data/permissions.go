@@ -19,10 +19,7 @@ func (p Permissions) Include(code string) bool {
 type PermissionModel struct {
 DB *sql.DB
 }
-// The GetAllForUser() method returns all permission codes for a specific user in a
-// Permissions slice. The code in this method should feel very familiar --- it uses the
-// standard pattern that we've already seen before for retrieving multiple data rows in
-// an SQL query.
+
 func (m PermissionModel) GetAllForUser(userID int64) (Permissions, error) {
 	query := `
 		SELECT permissions.code
@@ -59,4 +56,4 @@ func (m PermissionModel) AddForUser(userID int64, codes ...string) error {
 	defer cancel()
 	_, err := m.DB.ExecContext(ctx, query, userID, pq.Array(codes))
 	return err
-	}
+}
