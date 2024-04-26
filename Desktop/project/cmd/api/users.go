@@ -2,7 +2,7 @@ package main
 
 import (
 	"errors"
-	"fmt"
+	//"fmt"
 	"net/http"
 	"series.bekarysrymkhanov.net/internal/data"
 	"series.bekarysrymkhanov.net/internal/validator"
@@ -11,58 +11,68 @@ import (
 
 func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 	var input struct {
-		Name     string `json:"name"`
-		Email    string `json:"email"`
+		Name string `json:"name"`
+		Email string `json:"email"`
 		Password string `json:"password"`
 	}
 	err := app.readJSON(w, r, &input)
-	if err != nil {
-		app.badRequestResponse(w, r, err)
-		return
+		if err != nil {
+			app.badRequestResponse(w, r, err)
+			return
 	}
-
 	user := &data.User{
-		Name:      input.Name,
-		Email:     input.Email,
+		Name: input.Name,
+		Email: input.Email,
 		Activated: false,
 	}
-
+	
 	err = user.Password.Set(input.Password)
-	if err != nil {
-		app.serverErrorResponse(w, r, err)
-		return
+		if err != nil {
+			app.serverErrorResponse(w, r, err)
+				return
 	}
 	v := validator.New()
-
-	if data.ValidateUser(v, user); !v.Valid() {
-		app.failedValidationResponse(w, r, v.Errors)
-		return
+		if data.ValidateUser(v, user); !v.Valid() {
+			app.failedValidationResponse(w, r, v.Errors)
+				return
 	}
 	err = app.models.Users.Insert(user)
-	if err != nil {
-		switch {
-
+		if err != nil {
+			switch {
 		case errors.Is(err, data.ErrDuplicateEmail):
 			v.AddError("email", "a user with this email address already exists")
 			app.failedValidationResponse(w, r, v.Errors)
 		default:
 			app.serverErrorResponse(w, r, err)
-		}
-		return
 	}
-	token, err := app.models.Tokens.New(user.ID, 2*time.Minute, data.ScopeActivation)
-	if err != nil {
-		app.serverErrorResponse(w, r, err)
-		return
+	return
 	}
-	fmt.Println(token.Plaintext)
-
+	// Add the "movies:read" permission for the new user.
+	err = app.models.Permissions.AddForUser(user.ID, "movies:read")
+		if err != nil {
+			app.serverErrorResponse(w, r, err)
+				return
+	}
+	token, err := app.models.Tokens.New(user.ID, 3*24*time.Hour, data.ScopeActivation)
+		if err != nil {
+			app.serverErrorResponse(w, r, err)
+				return
+	}
+		app.background(func() {
+			data := map[string]interface{}{
+			"activationToken": token.Plaintext,
+				"userID": user.ID,
+	}
+	err = app.mailer.Send(user.Email, "user_welcome.tmpl", data)
+		if err != nil {
+			app.logger.PrintError(err, nil)
+	}
+	})
 	err = app.writeJSON(w, http.StatusAccepted, envelope{"user": user}, nil)
 	if err != nil {
-		app.serverErrorResponse(w, r, err)
+	app.serverErrorResponse(w, r, err)
 	}
 }
-
 func (app *application) activateUserHandler(w http.ResponseWriter, r *http.Request) {
 	var input struct {
 		TokenPlaintext string `json:"token"`
