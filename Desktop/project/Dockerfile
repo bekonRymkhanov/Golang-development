@@ -1,14 +1,35 @@
-FROM golang:1.21.6
+# Start from the official Golang image.
+FROM golang:1.22.1 as builder
 
+# Set the Current Working Directory inside the container.
 WORKDIR /app
 
-COPY go.mod .
-COPY internal .
-COPY cmd .
-COPY migrations .
-COPY remote .
-LABEL authors="User"
+# Copy go mod and sum files.
+COPY go.mod go.sum ./
 
-RUN go build -o bin .
+# Optionally copy any other necessary files (e.g., migrations).
+# If you have migrations or other data, uncomment and modify the next line.
+# COPY path_to_migrations_folder ./path_in_container
 
-ENTRYPOINT ["top", "-b"]
+# Download all dependencies. Dependencies will be cached if the go.mod and go.sum files are not changed.
+RUN go mod download
+
+# Copy the source code into the container.
+COPY . .
+
+# Build the application, disable CGO to create a static binary.
+RUN CGO_ENABLED=0 GOOS=linux go build -o project ./cmd/api
+
+# Use a smaller image to run the app.
+FROM alpine:latest
+RUN apk --no-cache add ca-certificates
+
+WORKDIR /root/
+
+# Copy the pre-built binary file from the previous stage.
+COPY --from=builder /app/project .
+# If you copied migrations or other data, make sure to copy them to the final image.
+COPY --from=builder /app/migrations ./migrations
+
+# Command to run the executable.
+CMD ["./project"]
