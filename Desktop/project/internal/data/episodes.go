@@ -165,7 +165,35 @@ func (e EpisodeModel) GetAll(title string, characters []string, filters Filters)
 
 	return episodes, metadata, nil
 }
+func (e EpisodeModel) GetCharactersByEpisode(id int64) ([]Character, error) {
+	if id < 1 {
+		return nil, ErrRecordNotFound
+	}
 
+	query := `SELECT c.id, c.name, c.age, c.version
+                FROM characters c
+                JOIN episode_characters ec ON c.id = ec.character_id
+                WHERE ec.episode_id = $1`
+	rows, err := e.DB.Query(query, id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var characters []Character
+	for rows.Next() {
+		var character Character
+		if err := rows.Scan(&character.ID, &character.Name, &character.Age, &character.Version); err != nil {
+			return nil, err
+		}
+		characters = append(characters, character)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return characters, nil
+}
 func ValidateMovie(v *validator.Validator, episode *Episode) {
 	v.Check(episode.Title != "", "title", "must be provided")
 	v.Check(len(episode.Title) <= 500, "title", "must not be more than 500 bytes long")

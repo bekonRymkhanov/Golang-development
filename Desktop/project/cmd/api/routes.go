@@ -16,7 +16,7 @@ func (app *application) routes() http.Handler {
 	router.HandlerFunc(http.MethodGet, "/Episodes/:id", app.requirePermission("movies:read", app.showEpisodeHandler))
 	router.HandlerFunc(http.MethodPatch, "/Episodes/:id", app.requirePermission("movies:write", app.updateEpisodeHandler))
 	router.HandlerFunc(http.MethodDelete, "/Episodes/:id", app.requirePermission("movies:write", app.deleteEpisodeHandler))
-
+	router.HandlerFunc(http.MethodGet, "/Episodes/:id/Characters", app.requirePermission("movies:write", app.showCharactersByEpisodesHandler))
 	router.HandlerFunc(http.MethodGet, "/Characters", app.requirePermission("movies:read", app.listCharactersHandler))
 	router.HandlerFunc(http.MethodPost, "/Characters", app.requirePermission("movies:write", app.createCharacterHandler))
 	router.HandlerFunc(http.MethodGet, "/Characters/:id", app.requirePermission("movies:read", app.showCharacterHandler))
