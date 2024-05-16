@@ -17,12 +17,13 @@ func (app *application) routes() http.Handler {
 	router.HandlerFunc(http.MethodPatch, "/Episodes/:id", app.requirePermission("movies:write", app.updateEpisodeHandler))
 	router.HandlerFunc(http.MethodDelete, "/Episodes/:id", app.requirePermission("movies:write", app.deleteEpisodeHandler))
 
+	router.HandlerFunc(http.MethodGet, "/Characters", app.requirePermission("movies:read", app.listCharactersHandler))
+	router.HandlerFunc(http.MethodPost, "/Characters", app.requirePermission("movies:write", app.createCharacterHandler))
+	router.HandlerFunc(http.MethodGet, "/Characters/:id", app.requirePermission("movies:read", app.showCharacterHandler))
+	router.HandlerFunc(http.MethodPatch, "/Characters/:id", app.requirePermission("movies:write", app.updateCharacterHandler))
+	router.HandlerFunc(http.MethodDelete, "/Characters/:id", app.requirePermission("movies:write", app.deleteCharacterHandler))
+
 	router.HandlerFunc(http.MethodGet, "/healthcheck", app.healthcheckHandler)
-	// router.HandlerFunc(http.MethodPost, "/Episodes", app.createEpisodeHandler)
-	// router.HandlerFunc(http.MethodGet, "/Episodes", app.listEpisodesHandler)
-	// router.HandlerFunc(http.MethodGet, "/Episodes/:id", app.showEpisodeHandler)
-	// router.HandlerFunc(http.MethodPatch, "/Episodes/:id", app.updateEpisodeHandler)
-	// router.HandlerFunc(http.MethodDelete, "/Episodes/:id", app.deleteEpisodeHandler)
 
 	router.HandlerFunc(http.MethodPost, "/users", app.registerUserHandler)
 	router.HandlerFunc(http.MethodPut, "/users/activated", app.activateUserHandler)

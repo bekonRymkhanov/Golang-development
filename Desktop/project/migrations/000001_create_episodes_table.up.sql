@@ -5,11 +5,12 @@ create table if not exists episodes(
     year integer NOT NULL,
     runtime integer NOT NULL,
     characters text[] NOT NULL,
-    version integer NOT NULL DEFAULT 1
+    version integer NOT NULL DEFAULT 1,
     );
 
 create table if not exists characters(
     id bigserial PRIMARY KEY,
     name text,
-    episodeId integer[]
+    age integer NOT NULL ,
+    version integer NOT NULL DEFAULT 1
 );
