@@ -17,11 +17,19 @@ func (app *application) routes() http.Handler {
 	router.HandlerFunc(http.MethodPatch, "/Episodes/:id", app.requirePermission("movies:write", app.updateEpisodeHandler))
 	router.HandlerFunc(http.MethodDelete, "/Episodes/:id", app.requirePermission("movies:write", app.deleteEpisodeHandler))
 	router.HandlerFunc(http.MethodGet, "/Episodes/:id/Characters", app.requirePermission("movies:write", app.showCharactersByEpisodesHandler))
+
 	router.HandlerFunc(http.MethodGet, "/Characters", app.requirePermission("movies:read", app.listCharactersHandler))
 	router.HandlerFunc(http.MethodPost, "/Characters", app.requirePermission("movies:write", app.createCharacterHandler))
 	router.HandlerFunc(http.MethodGet, "/Characters/:id", app.requirePermission("movies:read", app.showCharacterHandler))
 	router.HandlerFunc(http.MethodPatch, "/Characters/:id", app.requirePermission("movies:write", app.updateCharacterHandler))
 	router.HandlerFunc(http.MethodDelete, "/Characters/:id", app.requirePermission("movies:write", app.deleteCharacterHandler))
+
+	router.HandlerFunc(http.MethodGet, "/Like", app.requirePermission("movies:read", app.listLikeHandler))
+	router.HandlerFunc(http.MethodPost, "/Like", app.requirePermission("movies:write", app.createLikeCommentHandler))
+	router.HandlerFunc(http.MethodGet, "/Like/:id", app.requirePermission("movies:read", app.showLikeHandler))
+	router.HandlerFunc(http.MethodPatch, "/Like/:id", app.requirePermission("movies:write", app.updateLikeCommentHandler))
+	router.HandlerFunc(http.MethodDelete, "/Like/:id", app.requirePermission("movies:write", app.deleteLikeCommentHandler))
+
 
 	router.HandlerFunc(http.MethodGet, "/healthcheck", app.healthcheckHandler)
 
