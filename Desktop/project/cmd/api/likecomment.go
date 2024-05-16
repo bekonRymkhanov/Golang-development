@@ -2,11 +2,12 @@ package main
 
 import (
 	"errors"
-	"net/http"
 	"fmt"
+	"net/http"
 	"series.bekarysrymkhanov.net/internal/data"
 	"series.bekarysrymkhanov.net/internal/validator"
 )
+
 func (app *application) createLikeCommentHandler(w http.ResponseWriter, r *http.Request) {
 	var input struct {
 		UserID      int    `json:"user_id"`
@@ -27,7 +28,6 @@ func (app *application) createLikeCommentHandler(w http.ResponseWriter, r *http.
 		EpisodeID:   input.EpisodeID,
 		CommentText: input.CommentText,
 	}
-
 
 	if data.ValidateLike(v, likeComment); !v.Valid() {
 		app.failedValidationResponse(w, r, v.Errors)
@@ -159,34 +159,35 @@ func (app *application) deleteLikeCommentHandler(w http.ResponseWriter, r *http.
 func (app *application) listLikeHandler(w http.ResponseWriter, r *http.Request) {
 
 	var input struct {
-		id int // Define LikeID as an int field
+		CommentText string
 		data.Filters
 	}
 	v := validator.New()
 
 	qs := r.URL.Query()
 
-	input.id = app.readInt(qs, "id", 0, v) // Use 0 as the default value for LikeID
+	input.CommentText = app.readString(qs, "comment_text", "")
+
 	input.Filters.Page = app.readInt(qs, "page", 1, v)
 	input.Filters.PageSize = app.readInt(qs, "page_size", 20, v)
 
 	input.Filters.Sort = app.readString(qs, "sort", "id")
 
-	input.Filters.SortSafelist = []string{"id", "-id"}
+	input.Filters.SortSafelist = []string{"id", "user_id", "episode_id", "like_count", "comment_text", "-id", "-user_id", "-episode_id", "-like_count", "comment_text"}
 
 	if data.ValidateFilters(v, input.Filters); !v.Valid() {
 		app.failedValidationResponse(w, r, v.Errors)
 		return
 	}
 
-	likeComment, metadata, err := app.models.LikeComment.GetAll(fmt.Sprintf("%d", input.id), input.Filters)
-
+	likes, metadata, err := app.models.LikeComment.GetAll(input.CommentText, input.Filters)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 		return
 	}
-	err = app.writeJSON(w, http.StatusOK, envelope{"likeComment": likeComment, "metadata": metadata}, nil)
+	err = app.writeJSON(w, http.StatusOK, envelope{"likes": likes, "metadata": metadata}, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}
+
 }

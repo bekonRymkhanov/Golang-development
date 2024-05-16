@@ -5,20 +5,20 @@ import (
 	"database/sql"
 	//"errors"
 	"fmt"
-	"time"
 	"log"
+	"time"
 	//"github.com/lib/pq"
 	"series.bekarysrymkhanov.net/internal/validator"
 )
 
 type LikeComment struct {
-	LikeID        int     `json:"like_id"`
-	UserID      int    `json:"user_id" db:"user_id"`
-	EpisodeID      int    `json:"episode_id" db:"episode_id"`
-	CommentText string     `json:"comment_text"`
-	LikeCount int `json:"like_count"`
-	CreatedAt        time.Time `json:"created_at"`
-	Version          int       `json:"-"`
+	LikeID      int       `json:"id"`
+	UserID      int       `json:"user_id"`
+	EpisodeID   int       `json:"episode_id"`
+	CommentText string    `json:"comment_text"`
+	LikeCount   int       `json:"like_count"`
+	CreatedAt   time.Time `json:"created_at"`
+	Version     int       `json:"-"`
 }
 type LikeCommentModel struct {
 	DB       *sql.DB
@@ -29,14 +29,14 @@ type LikeCommentModel struct {
 func (lcm *LikeCommentModel) Insert(likeComment *LikeComment) error {
 	query := `INSERT INTO like_comment (user_id, episode_id, comment_text) 
 				VALUES ($1, $2, $3)
-				RETURNING like_id,created_at`
+				RETURNING id,created_at`
 
-	args := []interface{}{likeComment.UserID,likeComment.EpisodeID,likeComment.CommentText}
+	args := []interface{}{likeComment.UserID, likeComment.EpisodeID, likeComment.CommentText}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	return lcm.DB.QueryRowContext(ctx, query, args...).Scan(&likeComment.LikeID,likeComment.CreatedAt)
+	return lcm.DB.QueryRowContext(ctx, query, args...).Scan(&likeComment.LikeID, &likeComment.CreatedAt)
 }
 
 func (lcm *LikeCommentModel) Delete(likeID int64) error {
@@ -45,7 +45,7 @@ func (lcm *LikeCommentModel) Delete(likeID int64) error {
 	}
 
 	query := `DELETE FROM like_comment
-				WHERE like_id=$1`
+				WHERE id=$1`
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
@@ -57,7 +57,7 @@ func (lcm *LikeCommentModel) Delete(likeID int64) error {
 func (lcm *LikeCommentModel) Update(likeComment *LikeComment) error {
 	query := `UPDATE like_comment
 				SET comment_text = $1, like_count = $2, version = version + 1
-				WHERE like_id = $3 AND version = $4
+				WHERE id = $3 AND version = $4
 				RETURNING version`
 
 	args := []interface{}{
@@ -79,9 +79,9 @@ func (lcm *LikeCommentModel) Get(id int64) (*LikeComment, error) {
 		return nil, ErrRecordNotFound
 	}
 
-	query := `SELECT like_id, user_id, episode_id, comment_text, like_count, created_at, version
+	query := `SELECT id, user_id, episode_id, comment_text, like_count, created_at, version
 				FROM like_comment
-				WHERE like_id = $1`
+				WHERE id = $1`
 
 	var likeComment LikeComment
 
@@ -104,18 +104,18 @@ func (lcm *LikeCommentModel) Get(id int64) (*LikeComment, error) {
 	return &likeComment, nil
 }
 
-func (e LikeCommentModel) GetAll(name string, filters Filters) ([]*LikeComment, Metadata, error) {
+func (e LikeCommentModel) GetAll(commentText string, filters Filters) ([]*LikeComment, Metadata, error) {
 	query := fmt.Sprintf(`
-		SELECT  like_id, user_id, episode_id, comment_text, like_count, created_at, version
+		SELECT count(*) OVER(), id, user_id, episode_id, comment_text, like_count, created_at, version
 		FROM like_comment
-		WHERE (to_tsvector('simple', like_id) @@ plainto_tsquery('simple', $1) OR $1 = '')
+		WHERE (to_tsvector('simple',comment_text) @@ plainto_tsquery('simple', $1) OR $1 = '')
 		ORDER BY %s %s, id ASC
 		LIMIT $2 OFFSET $3`, filters.sortColumn(), filters.sortDirection())
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	rows, err := e.DB.QueryContext(ctx, query, name, filters.limit(), filters.offset())
+	rows, err := e.DB.QueryContext(ctx, query, commentText, filters.limit(), filters.offset())
 	if err != nil {
 		return nil, Metadata{}, err
 	}
@@ -133,6 +133,9 @@ func (e LikeCommentModel) GetAll(name string, filters Filters) ([]*LikeComment, 
 			&like.LikeID,
 			&like.UserID,
 			&like.EpisodeID,
+			&like.CommentText,
+			&like.LikeCount,
+			&like.CreatedAt,
 			&like.Version,
 		)
 		if err != nil {
