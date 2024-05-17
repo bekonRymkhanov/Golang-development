@@ -10,8 +10,9 @@ import (
 
 func (app *application) createCharacterHandler(w http.ResponseWriter, r *http.Request) {
 	var input struct {
-		Name string `json:"name"`
-		Age  int64  `json:"age"`
+		EpisodesID int    `json:"episodes_id"`
+		Name       string `json:"name"`
+		Age        int64  `json:"age"`
 	}
 
 	err := app.readJSON(w, r, &input)
@@ -23,8 +24,9 @@ func (app *application) createCharacterHandler(w http.ResponseWriter, r *http.Re
 	v := validator.New()
 
 	character := &data.Character{
-		Name: input.Name,
-		Age:  input.Age,
+		EpisodesID: input.EpisodesID,
+		Name:       input.Name,
+		Age:        input.Age,
 	}
 
 	if data.ValidateCharacter(v, character); !v.Valid() {
@@ -43,11 +45,9 @@ func (app *application) createCharacterHandler(w http.ResponseWriter, r *http.Re
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}
-
 }
 
 func (app *application) showCharacterHandler(w http.ResponseWriter, r *http.Request) {
-
 	id, err := app.readIDParam(w, r)
 	if err != nil {
 		app.notFoundResponse(w, r)
@@ -67,11 +67,10 @@ func (app *application) showCharacterHandler(w http.ResponseWriter, r *http.Requ
 	err = app.writeJSON(w, http.StatusOK, envelope{"character": character}, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
-
 	}
 }
-func (app *application) updateCharacterHandler(w http.ResponseWriter, r *http.Request) {
 
+func (app *application) updateCharacterHandler(w http.ResponseWriter, r *http.Request) {
 	id, err := app.readIDParam(w, r)
 	if err != nil {
 		app.notFoundResponse(w, r)
@@ -87,9 +86,11 @@ func (app *application) updateCharacterHandler(w http.ResponseWriter, r *http.Re
 		}
 		return
 	}
+
 	var input struct {
-		Name *string `json:"name"`
-		Age  *int64  `json:"age"`
+		EpisodesID *int    `json:"episodes_id"`
+		Name       *string `json:"name"`
+		Age        *int64  `json:"age"`
 	}
 
 	err = app.readJSON(w, r, &input)
@@ -98,12 +99,16 @@ func (app *application) updateCharacterHandler(w http.ResponseWriter, r *http.Re
 		return
 	}
 
+	if input.EpisodesID != nil {
+		character.EpisodesID = *input.EpisodesID
+	}
 	if input.Name != nil {
 		character.Name = *input.Name
 	}
 	if input.Age != nil {
 		character.Age = *input.Age
 	}
+
 	v := validator.New()
 
 	if data.ValidateCharacter(v, character); !v.Valid() {
@@ -126,11 +131,9 @@ func (app *application) updateCharacterHandler(w http.ResponseWriter, r *http.Re
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}
-
 }
 
 func (app *application) deleteCharacterHandler(w http.ResponseWriter, r *http.Request) {
-
 	id, err := app.readIDParam(w, r)
 	if err != nil {
 		app.notFoundResponse(w, r)
@@ -152,11 +155,9 @@ func (app *application) deleteCharacterHandler(w http.ResponseWriter, r *http.Re
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}
-
 }
 
 func (app *application) listCharactersHandler(w http.ResponseWriter, r *http.Request) {
-
 	var input struct {
 		Name string
 		data.Filters
@@ -172,7 +173,7 @@ func (app *application) listCharactersHandler(w http.ResponseWriter, r *http.Req
 
 	input.Filters.Sort = app.readString(qs, "sort", "id")
 
-	input.Filters.SortSafelist = []string{"id", "name", "age", "-id", "-name", "-age"}
+	input.Filters.SortSafelist = []string{"id", "episodes_id", "name", "age", "-id", "-episodes_id", "-name", "-age"}
 
 	if data.ValidateFilters(v, input.Filters); !v.Valid() {
 		app.failedValidationResponse(w, r, v.Errors)
@@ -188,5 +189,30 @@ func (app *application) listCharactersHandler(w http.ResponseWriter, r *http.Req
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}
+}
+func (app *application) showCharactersByEpisodesHandler(w http.ResponseWriter, r *http.Request) {
+	// Extract the episode ID from the URL parameters
+	id, err := app.readIDParam(w, r)
+	if err != nil {
+		app.notFoundResponse(w, r)
+		return
+	}
 
+	// Retrieve characters for the specified episode
+	characters, err := app.models.Characters.GetByEpisodeID(id)
+	if err != nil {
+		switch {
+		case errors.Is(err, data.ErrRecordNotFound):
+			app.notFoundResponse(w, r)
+		default:
+			app.serverErrorResponse(w, r, err)
+		}
+		return
+	}
+
+	// Write the characters as a JSON response
+	err = app.writeJSON(w, http.StatusOK, envelope{"characters": characters}, nil)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
 }

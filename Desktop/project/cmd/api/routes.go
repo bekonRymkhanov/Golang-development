@@ -17,6 +17,7 @@ func (app *application) routes() http.Handler {
 	router.HandlerFunc(http.MethodPatch, "/Episodes/:id", app.requirePermission("movies:write", app.updateEpisodeHandler))
 	router.HandlerFunc(http.MethodDelete, "/Episodes/:id", app.requirePermission("movies:write", app.deleteEpisodeHandler))
 	router.HandlerFunc(http.MethodGet, "/Episodes/:id/Characters", app.requirePermission("movies:write", app.showCharactersByEpisodesHandler))
+	router.HandlerFunc(http.MethodGet, "/Episodes/:id/Like", app.requirePermission("movies:write", app.listLikeByEpisodeIdHandler))
 
 	router.HandlerFunc(http.MethodGet, "/Characters", app.requirePermission("movies:read", app.listCharactersHandler))
 	router.HandlerFunc(http.MethodPost, "/Characters", app.requirePermission("movies:write", app.createCharacterHandler))
@@ -29,7 +30,6 @@ func (app *application) routes() http.Handler {
 	router.HandlerFunc(http.MethodGet, "/Like/:id", app.requirePermission("movies:read", app.showLikeHandler))
 	router.HandlerFunc(http.MethodPatch, "/Like/:id", app.requirePermission("movies:write", app.updateLikeCommentHandler))
 	router.HandlerFunc(http.MethodDelete, "/Like/:id", app.requirePermission("movies:write", app.deleteLikeCommentHandler))
-
 
 	router.HandlerFunc(http.MethodGet, "/healthcheck", app.healthcheckHandler)
 

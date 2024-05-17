@@ -22,7 +22,6 @@ func (app *application) createLikeCommentHandler(w http.ResponseWriter, r *http.
 	}
 
 	v := validator.New()
-
 	likeComment := &data.LikeComment{
 		UserID:      input.UserID,
 		EpisodeID:   input.EpisodeID,
@@ -46,7 +45,6 @@ func (app *application) createLikeCommentHandler(w http.ResponseWriter, r *http.
 		app.serverErrorResponse(w, r, err)
 	}
 }
-
 func (app *application) updateLikeCommentHandler(w http.ResponseWriter, r *http.Request) {
 	id, err := app.readIDParam(w, r)
 	if err != nil {
@@ -68,7 +66,6 @@ func (app *application) updateLikeCommentHandler(w http.ResponseWriter, r *http.
 	var input struct {
 		CommentText *string `json:"comment_text"`
 		LikeCount   *int    `json:"like_count"`
-		LikeID      *int    `json:"like_id"`
 		Version     *int    `json:"-"`
 	}
 
@@ -86,7 +83,6 @@ func (app *application) updateLikeCommentHandler(w http.ResponseWriter, r *http.
 	}
 
 	v := validator.New()
-
 	if data.ValidateLike(v, likeComment); !v.Valid() {
 		app.failedValidationResponse(w, r, v.Errors)
 		return
@@ -110,12 +106,12 @@ func (app *application) updateLikeCommentHandler(w http.ResponseWriter, r *http.
 }
 
 func (app *application) showLikeHandler(w http.ResponseWriter, r *http.Request) {
-
 	id, err := app.readIDParam(w, r)
 	if err != nil {
 		app.notFoundResponse(w, r)
 		return
 	}
+
 	likeComment, err := app.models.LikeComment.Get(id)
 	if err != nil {
 		switch {
@@ -130,9 +126,9 @@ func (app *application) showLikeHandler(w http.ResponseWriter, r *http.Request) 
 	err = app.writeJSON(w, http.StatusOK, envelope{"likeComment": likeComment}, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
-
 	}
 }
+
 func (app *application) deleteLikeCommentHandler(w http.ResponseWriter, r *http.Request) {
 	id, err := app.readIDParam(w, r)
 	if err != nil {
@@ -156,8 +152,8 @@ func (app *application) deleteLikeCommentHandler(w http.ResponseWriter, r *http.
 		app.serverErrorResponse(w, r, err)
 	}
 }
-func (app *application) listLikeHandler(w http.ResponseWriter, r *http.Request) {
 
+func (app *application) listLikeHandler(w http.ResponseWriter, r *http.Request) {
 	var input struct {
 		CommentText string
 		data.Filters
@@ -165,14 +161,10 @@ func (app *application) listLikeHandler(w http.ResponseWriter, r *http.Request) 
 	v := validator.New()
 
 	qs := r.URL.Query()
-
 	input.CommentText = app.readString(qs, "comment_text", "")
-
 	input.Filters.Page = app.readInt(qs, "page", 1, v)
 	input.Filters.PageSize = app.readInt(qs, "page_size", 20, v)
-
 	input.Filters.Sort = app.readString(qs, "sort", "id")
-
 	input.Filters.SortSafelist = []string{"id", "user_id", "episode_id", "like_count", "comment_text", "-id", "-user_id", "-episode_id", "-like_count", "comment_text"}
 
 	if data.ValidateFilters(v, input.Filters); !v.Valid() {
@@ -185,9 +177,47 @@ func (app *application) listLikeHandler(w http.ResponseWriter, r *http.Request) 
 		app.serverErrorResponse(w, r, err)
 		return
 	}
+
 	err = app.writeJSON(w, http.StatusOK, envelope{"likes": likes, "metadata": metadata}, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}
+}
+func (app *application) listLikeByEpisodeIdHandler(w http.ResponseWriter, r *http.Request) {
 
+	// Read episode ID from the URL parameters
+	episodeID, err := app.readIDParam(w, r)
+	if err != nil {
+		app.notFoundResponse(w, r)
+		return
+	}
+
+	// Read the query parameters for pagination and sorting
+	var input struct {
+		data.Filters
+	}
+	v := validator.New()
+	qs := r.URL.Query()
+	input.Filters.Page = app.readInt(qs, "page", 1, v)
+	input.Filters.PageSize = app.readInt(qs, "page_size", 20, v)
+	input.Filters.Sort = app.readString(qs, "sort", "id")
+	input.Filters.SortSafelist = []string{"id", "user_id", "like_count", "comment_text", "created_at", "-id", "-user_id", "-like_count", "-comment_text", "-created_at"}
+
+	if data.ValidateFilters(v, input.Filters); !v.Valid() {
+		app.failedValidationResponse(w, r, v.Errors)
+		return
+	}
+
+	// Get the likes and comments for the episode
+	likes, metadata, err := app.models.LikeComment.GetAllByEpisodeID(episodeID, input.Filters)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+
+	// Write the response
+	err = app.writeJSON(w, http.StatusOK, envelope{"likes": likes, "metadata": metadata}, nil)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
 }

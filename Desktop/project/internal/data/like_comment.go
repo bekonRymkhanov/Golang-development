@@ -152,7 +152,51 @@ func (e LikeCommentModel) GetAll(commentText string, filters Filters) ([]*LikeCo
 
 	return likes, metadata, nil
 }
+func (lcm *LikeCommentModel) GetAllByEpisodeID(episodeID int64, filters Filters) ([]*LikeComment, Metadata, error) {
+	query := fmt.Sprintf(`
+		SELECT count(*) OVER(), id, user_id, episode_id, comment_text, like_count, created_at, version
+		FROM like_comment
+		WHERE episode_id = $1
+		ORDER BY %s %s, id ASC
+		LIMIT $2 OFFSET $3`, filters.sortColumn(), filters.sortDirection())
 
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	rows, err := lcm.DB.QueryContext(ctx, query, episodeID, filters.limit(), filters.offset())
+	if err != nil {
+		return nil, Metadata{}, err
+	}
+	defer rows.Close()
+
+	totalRecords := 0
+	likes := []*LikeComment{}
+
+	for rows.Next() {
+		var like LikeComment
+		err := rows.Scan(
+			&totalRecords,
+			&like.LikeID,
+			&like.UserID,
+			&like.EpisodeID,
+			&like.CommentText,
+			&like.LikeCount,
+			&like.CreatedAt,
+			&like.Version,
+		)
+		if err != nil {
+			return nil, Metadata{}, err
+		}
+		likes = append(likes, &like)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, Metadata{}, err
+	}
+
+	metadata := calculateMetadata(totalRecords, filters.Page, filters.PageSize)
+	return likes, metadata, nil
+}
 func ValidateLike(v *validator.Validator, likeComment *LikeComment) {
 	// Check if the title field is empty.
 	v.Check(likeComment.CommentText != "", "CommentText", "must be provided")

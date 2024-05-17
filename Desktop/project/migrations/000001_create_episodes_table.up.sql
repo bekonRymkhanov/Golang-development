@@ -10,12 +10,8 @@ create table if not exists episodes(
 
 create table if not exists characters(
     id bigserial PRIMARY KEY,
+    episodes_id integer REFERENCES episodes(id) ON DELETE CASCADE,
     name text,
     age integer NOT NULL ,
     version integer NOT NULL DEFAULT 1
-);
-CREATE TABLE IF NOT EXISTS episode_characters (
-    id BIGSERIAL PRIMARY KEY,
-    episode_id BIGINT REFERENCES episodes(id),
-    character_id BIGINT REFERENCES characters(id)
 );

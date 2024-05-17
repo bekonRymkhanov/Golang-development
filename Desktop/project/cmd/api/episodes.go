@@ -205,28 +205,3 @@ func (app *application) listEpisodesHandler(w http.ResponseWriter, r *http.Reque
 	}
 
 }
-func (app *application) showCharactersByEpisodesHandler(w http.ResponseWriter, r *http.Request) {
-	id, err := app.readIDParam(w, r)
-	if err != nil {
-		app.notFoundResponse(w, r)
-		return
-	}
-
-	// Fetch the episode from the database
-	episode, err := app.models.Movies.Get(id)
-	if err != nil {
-		switch {
-		case errors.Is(err, data.ErrRecordNotFound):
-			app.notFoundResponse(w, r)
-		default:
-			app.serverErrorResponse(w, r, err)
-		}
-		return
-	}
-
-	// Respond with the characters of the episode
-	err = app.writeJSON(w, http.StatusOK, envelope{"characters": episode.Characters}, nil)
-	if err != nil {
-		app.serverErrorResponse(w, r, err)
-	}
-}
