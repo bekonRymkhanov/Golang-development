@@ -99,6 +99,7 @@ Contributing:
 Authors and acknowledgment:
 
         Rymkhanov Bekarys 22B030423
+        Zeinolla Dilnaz   22B031177
 
 
 Project status:
